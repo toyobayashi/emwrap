@@ -1,0 +1,30 @@
+{
+  "name": "@tybys/emwrap",
+  "version": "1.0.0",
+  "description": "Node.js CLI tool for wrapping emscripten glue code to module",
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "bin": {
+    "emwrap": "./bin/emwrap.js"
+  },
+  "keywords": [
+    "wasm",
+    "webassembly",
+    "emscripten",
+    "umd"
+  ],
+  "author": "toyobayashi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toyobayashi/emwrap.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/toyobayashi/emwrap#readme",
+  "license": "MIT",
+  "dependencies": {
+    "minimist": "^1.2.5",
+    "terser": "^5.9.0"
+  }
+}
