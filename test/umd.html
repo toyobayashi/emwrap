@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>umd</title>
+</head>
+<body>
+  <script src="out/lib.umd.js"></script>
+  <script>
+    lib.default().then(function (emctx) {
+      console.log(emctx.Module._add(1, 2))
+    })
+  </script>
+</body>
+</html>

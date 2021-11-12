@@ -81,7 +81,7 @@ ${module === 'umd' ? `
 })(this), function (require, process, module) {
   var __cgen_dcs__ = '';
   try {
-    __cgen_dcs__ = document.currentScript.src;
+    __cgen_dcs__ = ${module === 'esm' ? 'import.meta.url' : 'document.currentScript.src'};
   } catch (_) {}
   function __cgen_emwrapper__ (Module) {
 `
