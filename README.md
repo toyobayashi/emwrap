@@ -1,6 +1,6 @@
 # emwrap
 
-Node.js CLI tool for wrapping emscripten glue code to module
+Node.js CLI tool for wrapping emscripten glue code to module.
 
 ## Usage
 
