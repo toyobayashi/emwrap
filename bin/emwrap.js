@@ -71,11 +71,7 @@ async function emwrap (filePath, options) {
     throw new TypeError('missing input file')
   }
   options = options || {}
-  const module = options.module || 'umd'
-  if (module !== 'umd' && module !== 'esm') {
-    throw new Error(`unsupport module type: ${module}`)
-  }
-  options.outputPath = options.outputPath || path.join(path.dirname(filePath), path.basename(filePath, '.js') + '.' + module + '.js')
+  options.outputPath = options.outputPath || filePath
   const code = await require('..').wrap(fs.readFileSync(filePath, 'utf8'), options)
 
   await fs.promises.writeFile(options.outputPath, code, 'utf8')

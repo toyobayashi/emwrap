@@ -28,7 +28,7 @@ async function wrap (code, options) {
   code = code.replace(/document\.currentScript\.src/g, '__cgen_dcs__')
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
-  const pre = `${module === 'esm' ? 'var Module;\nexport default (' : ''}
+  const pre = `${module === 'esm' ? 'var Module;\nvar __exports =' : ''}
 (function (root, factory) {
   var nativeRequire;
 
@@ -204,7 +204,7 @@ ${fs.readFileSync(wrapScript, 'utf8')}
     return exports;
   })();
 })
-${module === 'esm' ? ')["default"];' : ';'}
+${module === 'esm' ? 'export default __exports["default"];' : ';'}
 
 ${(module === 'esm' && wrapScript) ? fs.readFileSync(wrapScript, 'utf8') : ''}
 `
