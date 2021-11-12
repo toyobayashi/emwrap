@@ -5,6 +5,8 @@ if (process.argv.length <= 2) {
   process.exit(0)
 }
 
+const path = require('path')
+const fs = require('fs')
 const minimist = require('minimist')
 
 const args = minimist(process.argv.slice(2), {
@@ -36,14 +38,16 @@ if (args._.length > 0) {
     process.exit(1)
   }
   const exports = (args.exports || '')
-  require('..').emwrap({
-    filePath,
+  emwrap(filePath, {
     module: args.module || '',
     outputPath: args.output || '',
     libName: args.name || '',
     wrapScript: args.script || '',
     minify: Boolean(args.minify),
     exportsOnInit: exports ? exports.split(',') : []
+  }).catch(err => {
+    console.error(err)
+    process.exit(1)
   })
 } else {
   console.error('Error: missing input file')
@@ -60,4 +64,19 @@ usage: emwrap [--name=myWasmLib] [--script=/path/to/export.js]
               [--output=/path/to/output.js] /path/to/emscripten/glue.js
 
 v${require('../package.json').version}`)
+}
+
+async function emwrap (filePath, options) {
+  if (!filePath || typeof filePath !== 'string') {
+    throw new TypeError('missing input file')
+  }
+  options = options || {}
+  const module = options.module || 'umd'
+  if (module !== 'umd' && module !== 'esm') {
+    throw new Error(`unsupport module type: ${module}`)
+  }
+  options.outputPath = options.outputPath || path.join(path.dirname(filePath), path.basename(filePath, '.js') + '.' + module + '.js')
+  const code = await require('..').wrap(fs.readFileSync(filePath, 'utf8'), options)
+
+  await fs.promises.writeFile(options.outputPath, code, 'utf8')
 }

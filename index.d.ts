@@ -1,11 +1,9 @@
-export declare interface EmwrapOptions {
-  filePath: string
-  module?: 'umd' | 'esm'
-  outputPath?: string
-  libName?: string
-  wrapScript?: string
-  minify?: boolean
-  exportsOnInit?: string[]
+export declare interface WrapOptions {
+  module?: 'umd' | 'esm';
+  libName?: string;
+  wrapScript?: string;
+  minify?: boolean;
+  exportsOnInit?: string[];
 }
 
-export declare function emwrap (options?: EmwrapOptions): Promise<void>;
+export declare function wrap (code: string, options?: WrapOptions): Promise<string>;

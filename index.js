@@ -2,17 +2,18 @@
 Object.defineProperty(exports, '__esModule', { value: true })
 
 const fs = require('fs')
-const path = require('path')
 
-async function emwrap (options) {
+async function wrap (code, options) {
+  if (!code || typeof code !== 'string') {
+    throw new TypeError('invalid code')
+  }
+
   options = options || {}
-  const filePath = options.filePath
   const module = options.module || 'umd'
   if (module !== 'umd' && module !== 'esm') {
-    throw new Error(`unsupport module type: ${module}`)
+    throw new TypeError(`unsupport module type: ${module}`)
   }
   const libName = options.libName || ''
-  const outputPath = options.outputPath || path.join(path.dirname(filePath), path.basename(filePath, '.js') + '.' + module + '.js')
   const wrapScript = options.wrapScript || ''
   const minify = typeof options.minify === 'boolean' ? options.minify : false
   let exportsOnInit = Array.isArray(options.exportsOnInit) ? options.exportsOnInit : []
@@ -22,8 +23,6 @@ async function emwrap (options) {
   if (moduleIndex !== -1) {
     exportsOnInit.splice(moduleIndex, 1)
   }
-
-  let code = fs.readFileSync(filePath, 'utf8')
 
   code = code.replace(/\s*if\s*\(typeof document\s*!==\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, '')
   code = code.replace(/document\.currentScript\.src/g, '__cgen_dcs__')
@@ -212,11 +211,10 @@ ${(module === 'esm' && wrapScript) ? fs.readFileSync(wrapScript, 'utf8') : ''}
   code = pre + code + post
   if (minify) {
     const terser = require('terser')
-    const minifiedCode = (await terser.minify(code, { compress: true, mangle: true })).code
-    fs.writeFileSync(outputPath, minifiedCode, 'utf8')
+    return (await terser.minify(code, { compress: true, mangle: true })).code
   } else {
-    fs.writeFileSync(outputPath, code, 'utf8')
+    return code
   }
 }
 
-exports.emwrap = emwrap
+exports.wrap = wrap
