@@ -84,7 +84,7 @@ emwrap --module=esm --minify glue.js
 
 Webpack is ok as well.
 
-### Override Emscripten `Module` options
+### Override Emscripten [`Module`](https://emscripten.org/docs/api_reference/module.html) options
 
 Pass options to the default exported `init` function:
 
