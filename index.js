@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value: true })
 
 const fs = require('fs')
 
-async function wrap (code, options) {
+function wrap (code, options) {
   if (!code || typeof code !== 'string') {
     throw new TypeError('invalid code')
   }
@@ -13,15 +13,14 @@ async function wrap (code, options) {
   if (module !== 'umd' && module !== 'esm' && module !== 'cjs' && module !== 'mjs') {
     throw new TypeError(`unsupport module type: ${module}`)
   }
-  const libName = options.libName || ''
-  const wrapScript = options.wrapScript || ''
-  const minify = typeof options.minify === 'boolean' ? options.minify : false
-  let exportsOnInit = Array.isArray(options.exportsOnInit) ? options.exportsOnInit : []
-  exportsOnInit = Array.from(new Set(exportsOnInit))
+  const name = options.name || ''
+  const script = options.script || ''
+  let exports = Array.isArray(options.exports) ? options.exports : []
+  exports = Array.from(new Set(exports))
 
-  const moduleIndex = exportsOnInit.indexOf('Module')
+  const moduleIndex = exports.indexOf('Module')
   if (moduleIndex !== -1) {
-    exportsOnInit.splice(moduleIndex, 1)
+    exports.splice(moduleIndex, 1)
   }
 
   code = code.replace(/\s*if\s*\(typeof document\s*!==\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, '')
@@ -55,7 +54,7 @@ ${module === 'mjs' ?
   var _process = root && root.process;
 `}
 ${module === 'umd' ? `
-  var name = '${libName}';
+  var name = '${name}';
   if(typeof exports === 'object' && typeof module === 'object') {
     module.exports = factory(nativeRequire, _process);
   } else if(typeof define === 'function' && define.amd) {
@@ -94,7 +93,7 @@ ${module === 'umd' ? `
       ? '(typeof __webpack_public_path__ !== "undefined" ? (typeof __filename !== "undefined" ? __filename : document.currentScript.src) : import.meta.url)'
       : '(typeof __filename !== "undefined" ? __filename : document.currentScript.src)'};
   } catch (_) {}
-  ${module === 'mjs' ? '  var __dirname = require("path").dirname(import.meta.url.substring(8));' : ''}
+  ${module === 'mjs' ? 'var __dirname = require("path").dirname(import.meta.url.substring(8));' : ''}
   function __cgen_emwrapper__ (Module) {
 
 /****************************************
@@ -109,14 +108,14 @@ ${module === 'umd' ? `
 
     return {
       Module: Module
-${exportsOnInit.map(v => `      ,${v}: typeof ${v} !== 'undefined' ? ${v} : undefined`).join('\n')}
+${exports.map(v => `      ,${v}: typeof ${v} !== 'undefined' ? ${v} : undefined`).join('\n')}
     };
   }
 
   return (function () {
     var initResult = {
       Module: null
-${exportsOnInit.map(v => `      ,${v}: undefined`).join('\n')}
+${exports.map(v => `      ,${v}: undefined`).join('\n')}
     };
     var exports = {};
     try {
@@ -174,7 +173,7 @@ ${(module === 'esm' || module === 'mjs') ? '' : '    var Module;'}
             }
           }
           initResult.Module = mod;
-${exportsOnInit.map(v => `          initResult['${v}'] = emctx['${v}'];`).join('\n')}
+${exports.map(v => `          initResult['${v}'] = emctx['${v}'];`).join('\n')}
           promise = null;
           resolve(initResult);
         };
@@ -208,10 +207,10 @@ ${exportsOnInit.map(v => `          initResult['${v}'] = emctx['${v}'];`).join('
       } catch (_) {}
     }
 
-    ${((module === 'umd' || module === 'cjs') && wrapScript) ? `
+    ${((module === 'umd' || module === 'cjs') && script) ? `
     (function (exports) {
 
-${fs.readFileSync(wrapScript, 'utf8')}
+${fs.readFileSync(script, 'utf8')}
 
     })(exports);
 ` : ''}
@@ -220,15 +219,20 @@ ${fs.readFileSync(wrapScript, 'utf8')}
 })
 ${(module === 'esm' || module === 'mjs') ? 'export default __exports["default"];' : ';'}
 
-${((module === 'esm' || module === 'mjs') && wrapScript) ? fs.readFileSync(wrapScript, 'utf8') : ''}
+${((module === 'esm' || module === 'mjs') && script) ? fs.readFileSync(script, 'utf8') : ''}
 `
-  code = pre + code + post
-  if (minify) {
-    const terser = require('terser')
-    return (await terser.minify(code, { compress: true, mangle: true })).code
-  } else {
-    return code
+  return pre + code + post
+}
+
+async function wrapAndMinify (code, options) {
+  const terser = require('terser')
+  const terserOptions = {
+    compress: true,
+    mangle: true,
+    ...(options.terser || {})
   }
+  return (await terser.minify(wrap(code, options), terserOptions)).code
 }
 
 exports.wrap = wrap
+exports.wrapAndMinify = wrapAndMinify

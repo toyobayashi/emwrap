@@ -5,7 +5,6 @@ if (process.argv.length <= 2) {
   process.exit(0)
 }
 
-const path = require('path')
 const fs = require('fs')
 const minimist = require('minimist')
 
@@ -40,11 +39,11 @@ if (args._.length > 0) {
   const exports = (args.exports || '')
   emwrap(filePath, {
     module: args.module || '',
-    outputPath: args.output || '',
-    libName: args.name || '',
-    wrapScript: args.script || '',
+    output: args.output || '',
+    name: args.name || '',
+    script: args.script || '',
     minify: Boolean(args.minify),
-    exportsOnInit: exports ? exports.split(',') : []
+    exports: exports ? exports.split(',') : []
   }).catch(err => {
     console.error(err)
     process.exit(1)
@@ -58,10 +57,13 @@ function printHelp () {
   console.log(
 `${require('../package.json').description}
 
-usage: emwrap [--name=myWasmLib] [--script=/path/to/export.js]
-              [--minify] [--exports=UTF8ToString,stringToUTF8]
-              [--module=<umd | esm>]
-              [--output=/path/to/output.js] /path/to/emscripten/glue.js
+emwrap [--name=myWasmLib]
+       [--module=<umd | esm | cjs | mjs>]
+       [--minify]
+       [--output=/path/to/output.js]
+       [--script=/path/to/script.js]
+       [--exports=UTF8ToString,stringToUTF8]
+       /path/to/emscripten/glue.js
 
 v${require('../package.json').version}`)
 }
@@ -70,9 +72,13 @@ async function emwrap (filePath, options) {
   if (!filePath || typeof filePath !== 'string') {
     throw new TypeError('missing input file')
   }
+  const { wrap, wrapAndMinify } = require('..')
   options = options || {}
-  options.outputPath = options.outputPath || filePath
-  const code = await require('..').wrap(fs.readFileSync(filePath, 'utf8'), options)
+  options.output = options.output || filePath
+  const minify = typeof options.minify === 'boolean' ? options.minify : false
+  const code = minify
+    ? (await wrapAndMinify(fs.readFileSync(filePath, 'utf8'), options))
+    : wrap(fs.readFileSync(filePath, 'utf8'), options)
 
-  await fs.promises.writeFile(options.outputPath, code, 'utf8')
+  await fs.promises.writeFile(options.output, code, 'utf8')
 }
