@@ -10,7 +10,7 @@ async function wrap (code, options) {
 
   options = options || {}
   const module = options.module || 'umd'
-  if (module !== 'umd' && module !== 'esm') {
+  if (module !== 'umd' && module !== 'esm' && module !== 'cjs') {
     throw new TypeError(`unsupport module type: ${module}`)
   }
   const libName = options.libName || ''
@@ -28,7 +28,11 @@ async function wrap (code, options) {
   code = code.replace(/document\.currentScript\.src/g, '__cgen_dcs__')
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
-  const pre = `${module === 'esm' ? 'var Module;\nvar __exports =' : ''}
+  const pre = `${module === 'esm'
+  ? 'var Module;\nvar __exports ='
+  : module === 'cjs' 
+    ? 'exports = module.exports ='
+    : ''}
 (function (root, factory) {
   var nativeRequire;
 
@@ -79,7 +83,9 @@ ${module === 'umd' ? `
 })(this), function (require, process, module) {
   var __cgen_dcs__ = '';
   try {
-    __cgen_dcs__ = ${module === 'esm' ? '(typeof __webpack_public_path__ !== "undefined" ? document.currentScript.src : import.meta.url)' : 'document.currentScript.src'};
+    __cgen_dcs__ = ${module === 'esm'
+      ? '(typeof __webpack_public_path__ !== "undefined" ? (typeof __filename !== "undefined" ? __filename : document.currentScript.src) : import.meta.url)'
+      : '(typeof __filename !== "undefined" ? __filename : document.currentScript.src)'};
   } catch (_) {}
   function __cgen_emwrapper__ (Module) {
 
@@ -110,7 +116,7 @@ ${exportsOnInit.map(v => `      ,${v}: undefined`).join('\n')}
     } catch (_) {
       exports.__esModule = true;
     }
-${module === 'umd' ? '    var Module;' : ''}
+${module === 'esm' ? '' : '    var Module;'}
     var promise = null;
 
     function init (mod) {
@@ -194,7 +200,7 @@ ${exportsOnInit.map(v => `          initResult['${v}'] = emctx['${v}'];`).join('
       } catch (_) {}
     }
 
-    ${(module === 'umd' && wrapScript) ? `
+    ${((module === 'umd' || module === 'cjs') && wrapScript) ? `
     (function (exports) {
 
 ${fs.readFileSync(wrapScript, 'utf8')}
