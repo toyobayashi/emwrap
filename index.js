@@ -10,7 +10,7 @@ async function wrap (code, options) {
 
   options = options || {}
   const module = options.module || 'umd'
-  if (module !== 'umd' && module !== 'esm' && module !== 'cjs') {
+  if (module !== 'umd' && module !== 'esm' && module !== 'cjs' && module !== 'mjs') {
     throw new TypeError(`unsupport module type: ${module}`)
   }
   const libName = options.libName || ''
@@ -28,12 +28,18 @@ async function wrap (code, options) {
   code = code.replace(/document\.currentScript\.src/g, '__cgen_dcs__')
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
-  const pre = `${module === 'esm'
-  ? 'var Module;\nvar __exports ='
+  const pre = `${module === 'esm' || module === 'mjs'
+  ? `${module === 'mjs' ? 'import { createRequire } from "module";' : ''}var Module;\nvar __exports =`
   : module === 'cjs' 
     ? 'exports = module.exports ='
     : ''}
 (function (root, factory) {
+${module === 'mjs' ?
+`
+  var nativeRequire = createRequire(process.cwd() + "/");
+  var _process = root && root.process;
+` :
+`
   var nativeRequire;
 
   if (typeof __webpack_public_path__ !== 'undefined') {
@@ -47,6 +53,7 @@ async function wrap (code, options) {
   }
 
   var _process = root && root.process;
+`}
 ${module === 'umd' ? `
   var name = '${libName}';
   if(typeof exports === 'object' && typeof module === 'object') {
@@ -83,10 +90,11 @@ ${module === 'umd' ? `
 })(this), function (require, process, module) {
   var __cgen_dcs__ = '';
   try {
-    __cgen_dcs__ = ${module === 'esm'
+    __cgen_dcs__ = ${module === 'mjs' ? 'import.meta.url.substring(8)' : module === 'esm'
       ? '(typeof __webpack_public_path__ !== "undefined" ? (typeof __filename !== "undefined" ? __filename : document.currentScript.src) : import.meta.url)'
       : '(typeof __filename !== "undefined" ? __filename : document.currentScript.src)'};
   } catch (_) {}
+  ${module === 'mjs' ? '  var __dirname = require("path").dirname(import.meta.url.substring(8));' : ''}
   function __cgen_emwrapper__ (Module) {
 
 /****************************************
@@ -116,7 +124,7 @@ ${exportsOnInit.map(v => `      ,${v}: undefined`).join('\n')}
     } catch (_) {
       exports.__esModule = true;
     }
-${module === 'esm' ? '' : '    var Module;'}
+${(module === 'esm' || module === 'mjs') ? '' : '    var Module;'}
     var promise = null;
 
     function init (mod) {
@@ -210,9 +218,9 @@ ${fs.readFileSync(wrapScript, 'utf8')}
     return exports;
   })();
 })
-${module === 'esm' ? 'export default __exports["default"];' : ';'}
+${(module === 'esm' || module === 'mjs') ? 'export default __exports["default"];' : ';'}
 
-${(module === 'esm' && wrapScript) ? fs.readFileSync(wrapScript, 'utf8') : ''}
+${((module === 'esm' || module === 'mjs') && wrapScript) ? fs.readFileSync(wrapScript, 'utf8') : ''}
 `
   code = pre + code + post
   if (minify) {
