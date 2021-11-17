@@ -19,6 +19,7 @@ emwrap [--name=myWasmLib]
        [--minify]
        [--output=/path/to/output.js]
        [--script=/path/to/script.js]
+       [--initscript=/path/to/script.js]
        [--exports=UTF8ToString,stringToUTF8]
        /path/to/emscripten/glue.js
 ```

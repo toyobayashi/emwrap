@@ -9,7 +9,7 @@ const fs = require('fs')
 const minimist = require('minimist')
 
 const args = minimist(process.argv.slice(2), {
-  string: ['name', 'script', 'output', 'exports', 'module'],
+  string: ['name', 'script', 'output', 'exports', 'module', 'initscript'],
   boolean: ['minify'],
   alias: {
     version: ['v', 'V'],
@@ -42,6 +42,7 @@ if (args._.length > 0) {
     output: args.output || '',
     name: args.name || '',
     script: args.script || '',
+    onInitScript: args.initscript || '',
     minify: Boolean(args.minify),
     exports: exports ? exports.split(',') : []
   }).catch(err => {
@@ -62,6 +63,7 @@ emwrap [--name=myWasmLib]
        [--minify]
        [--output=/path/to/output.js]
        [--script=/path/to/script.js]
+       [--initscript=/path/to/script.js]
        [--exports=UTF8ToString,stringToUTF8]
        /path/to/emscripten/glue.js
 

@@ -4,6 +4,7 @@ export declare interface WrapOptions {
   module?: 'umd' | 'esm' | 'cjs' | 'mjs';
   name?: string;
   script?: string;
+  onInitScript?: string;
   exports?: string[];
 }
 

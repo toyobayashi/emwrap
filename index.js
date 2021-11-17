@@ -15,6 +15,7 @@ function wrap (code, options) {
   }
   const name = options.name || ''
   const script = options.script || ''
+  const onInitScript = options.onInitScript || ''
   let exports = Array.isArray(options.exports) ? options.exports : []
   exports = Array.from(new Set(exports))
 
@@ -111,19 +112,19 @@ ${module === 'umd' ? `
 ${exports.map(v => `      ,${v}: typeof ${v} !== 'undefined' ? ${v} : undefined`).join('\n')}
     };
   }
+  ${(module === 'esm' || module === 'mjs') ? '' : 'var Module;'}
+  var exports = {};
+  try {
+    Object.defineProperty(exports, '__esModule', { value: true });
+  } catch (_) {
+    exports.__esModule = true;
+  }
 
-  return (function () {
+  return (function (exports, onExports, onInit) {
     var initResult = {
       Module: null
 ${exports.map(v => `      ,${v}: undefined`).join('\n')}
     };
-    var exports = {};
-    try {
-      Object.defineProperty(exports, '__esModule', { value: true });
-    } catch (_) {
-      exports.__esModule = true;
-    }
-${(module === 'esm' || module === 'mjs') ? '' : '    var Module;'}
     var promise = null;
 
     function init (mod) {
@@ -175,7 +176,28 @@ ${(module === 'esm' || module === 'mjs') ? '' : '    var Module;'}
           initResult.Module = mod;
 ${exports.map(v => `          initResult['${v}'] = emctx['${v}'];`).join('\n')}
           promise = null;
+${onInitScript ? `
+          var m = {};
+          var e = m.exports = {};
+          try {
+            onInit(e, m);
+            var exported = m.exports.__esModule ? m.exports['default'] : m.exports;
+            if (typeof exported === 'function') {
+              var r = Promise.resolve(exported(initResult, Module, exports));
+              r.then(function (_r) {
+                if (_r !== undefined) { resolve(_r); }
+                else { resolve(initResult); }
+              }).catch(reject);
+            } else {
+              resolve(initResult);
+            }
+          } catch (err) {
+            reject(err);
+            return;
+          }
+` : `
           resolve(initResult);
+`}
         };
 
         if (typeof process !== 'undefined') {
@@ -206,16 +228,13 @@ ${exports.map(v => `          initResult['${v}'] = emctx['${v}'];`).join('\n')}
         Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
       } catch (_) {}
     }
-
-    ${((module === 'umd' || module === 'cjs') && script) ? `
-    (function (exports) {
-
-${fs.readFileSync(script, 'utf8')}
-
-    })(exports);
-` : ''}
+    ${((module === 'umd' || module === 'cjs') && script) ? 'onExports(exports);' : ''}
     return exports;
-  })();
+  })(exports, ${((module === 'umd' || module === 'cjs') && script) ? `function (exports) {
+${fs.readFileSync(script, 'utf8')}
+  }` : 'null'}, ${onInitScript ? `function (exports, module) {
+${fs.readFileSync(onInitScript, 'utf8')}
+  }` : 'null'});
 })
 ${(module === 'esm' || module === 'mjs') ? 'export default __exports["default"];' : ';'}
 
