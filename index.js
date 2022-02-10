@@ -24,7 +24,7 @@ function wrap (code, options) {
     exports.splice(moduleIndex, 1)
   }
 
-  code = code.replace(/\s*if\s*\(typeof document\s*!==\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, '')
+  code = code.replace(/\s*if\s*\(typeof document\s*!==\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, ' ')
   code = code.replace(/document\.currentScript\.src/g, '__cgen_dcs__')
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
