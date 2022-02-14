@@ -3,6 +3,7 @@ import { MinifyOptions } from 'terser';
 export declare interface WrapOptions {
   module?: 'umd' | 'esm' | 'cjs' | 'mjs';
   name?: string;
+  weixin?: boolean;
   script?: string;
   onInitScript?: string;
   exports?: string[];

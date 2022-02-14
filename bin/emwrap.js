@@ -10,7 +10,7 @@ const minimist = require('minimist')
 
 const args = minimist(process.argv.slice(2), {
   string: ['name', 'script', 'output', 'exports', 'module', 'initscript'],
-  boolean: ['minify'],
+  boolean: ['minify', 'weixin'],
   alias: {
     version: ['v', 'V'],
     help: ['h'],
@@ -44,6 +44,7 @@ if (args._.length > 0) {
     script: args.script || '',
     onInitScript: args.initscript || '',
     minify: Boolean(args.minify),
+    weixin: Boolean(args.weixin),
     exports: exports ? exports.split(',') : []
   }).catch(err => {
     console.error(err)
@@ -61,6 +62,7 @@ function printHelp () {
 emwrap [--name=myWasmLib]
        [--module=<umd | esm | cjs | mjs>]
        [--minify]
+       [--weixin]
        [--output=/path/to/output.js]
        [--script=/path/to/script.js]
        [--initscript=/path/to/script.js]

@@ -17,12 +17,15 @@ npm install -g @tybys/emwrap
 emwrap [--name=myWasmLib]
        [--module=<umd | esm | cjs | mjs>]
        [--minify]
+       [--weixin]
        [--output=/path/to/output.js]
        [--script=/path/to/script.js]
        [--initscript=/path/to/script.js]
        [--exports=UTF8ToString,stringToUTF8]
        /path/to/emscripten/glue.js
 ```
+
+`--weixin`: Support `WXWebAssembly` in WeChat miniprogram environment
 
 ## Usage
 
