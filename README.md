@@ -101,3 +101,16 @@ init({
   // ...
 })
 ```
+
+### CMake
+
+```bash
+npm install -D @tybys/emwrap
+```
+
+```cmake
+add_custom_command(TARGET yourtarget POST_BUILD
+  COMMAND npx emwrap "--name=umdname" "$<TARGET_FILE:yourtarget>"
+  # COMMAND node "./other-script.js"
+)
+```
