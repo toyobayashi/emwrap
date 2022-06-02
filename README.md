@@ -72,6 +72,18 @@ import init from './glue.js'
 init().then(({ Module }) => { Module.myfunction() })
 ```
 
+Make sure to set `node.__dirname: false` or `node: false` in your webpack configuration.
+
+```js
+module.exports = {
+  node: {
+    __dirname: false
+  }
+  // or
+  // node: false
+}
+```
+
 ### ES Module
 
 ```bash
