@@ -98,8 +98,8 @@ ${module === 'umd' ? `
   var __cgen_dcs__ = '';
   try {
     __cgen_dcs__ = ${module === 'mjs' ? 'import.meta.url.substring(8)' : module === 'esm'
-      ? '(typeof __webpack_public_path__ !== "undefined" ? (typeof __filename !== "undefined" ? __filename : document.currentScript.src) : import.meta.url)'
-      : '(typeof __filename !== "undefined" ? __filename : document.currentScript.src)'};
+      ? '(typeof __webpack_public_path__ !== "undefined" ? document.currentScript.src : import.meta.url)'
+      : 'document.currentScript.src'};
   } catch (_) {}
   ${module === 'mjs' ? 'var __dirname = require("path").dirname(import.meta.url.substring(8));' : ''}
   function __cgen_emwrapper__ (Module) {
