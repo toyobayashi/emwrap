@@ -1,6 +1,6 @@
 {
   "name": "@tybys/emwrap",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Node.js CLI tool for wrapping emscripten glue code to module",
   "main": "index.js",
   "typings": "index.d.ts",

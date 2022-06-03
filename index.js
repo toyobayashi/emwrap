@@ -79,13 +79,24 @@ ${module === 'umd' ? `
   return factory(nativeRequire, _process);
 `}
 })((function (defaultValue) {
-  var g;
-  g = (function () { return this; })();
+  if (typeof globalThis !== 'undefined') return globalThis;
+  var g = (function () { return this })();
+  if (
+    !g &&
+    (function () {
+      var f;
+      try {
+        f = new Function();
+      } catch (_) {
+        return false;
+      }
+      return typeof f === 'function';
+    })()
+  ) {
+    g = new Function('return this')();
+  }
 
-  try {
-    g = g || new Function('return this')();
-  } catch (_) {
-    if (typeof globalThis !== 'undefined') return globalThis;
+  if (!g) {
     if (typeof __webpack_public_path__ === 'undefined') {
       if (typeof global !== 'undefined') return global;
     }
