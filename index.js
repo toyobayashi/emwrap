@@ -32,7 +32,8 @@ function wrap (code, options) {
   }
 
   code = code.replace(/\s*if\s*\(typeof document\s*!==?\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, ' ')
-  code = code.replace(/document\.currentScript\.src/g, '__cgen_dcs__')
+  code = code.replace(/\(?typeof document\s*!==?\s*['"]undefined['"]\s*&&\s*document\.currentScript\)?\s*\?\s*document\.currentScript\.src\s*:\s*((undefined)|(void 0))/g, '__emwrap_dcs__||undefined')
+  code = code.replace(/document\.currentScript\.src/g, '__emwrap_dcs__')
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
   const pre = `${module === 'esm' || module === 'mjs'
@@ -106,14 +107,14 @@ ${module === 'umd' ? `
 
   return g || defaultValue;
 })(this), function (require, process, module) {
-  var __cgen_dcs__ = '';
+  var __emwrap_dcs__ = '';
   try {
-    __cgen_dcs__ = ${module === 'mjs' ? 'import.meta.url.substring(8)' : module === 'esm'
+    __emwrap_dcs__ = ${module === 'mjs' ? 'import.meta.url.substring(8)' : module === 'esm'
       ? '(typeof __webpack_public_path__ !== "undefined" ? document.currentScript.src : import.meta.url)'
       : 'document.currentScript.src'};
   } catch (_) {}
   ${module === 'mjs' ? 'var __dirname = require("path").dirname(import.meta.url.substring(8));' : ''}
-  function __cgen_emwrapper__ (Module) {
+  function __emwrap_main__ (Module) {
 
   ${weixin ? `
     var _WebAssembly = typeof WXWebAssembly !== 'undefined'
@@ -266,7 +267,7 @@ ${onInitScript ? `
         if (typeof process !== 'undefined') {
           process.once('uncaughtException', reject)
         }
-        emctx = __cgen_emwrapper__(mod);
+        emctx = __emwrap_main__(mod);
       }).catch(function (err) {
         Module = undefined;
         initResult.Module = null;
