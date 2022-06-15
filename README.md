@@ -26,7 +26,7 @@ emwrap [--name=myWasmLib]
        /path/to/emscripten/glue.js
 ```
 
-`--weixin`: Support `WXWebAssembly` in WeChat miniprogram environment
+`--weixin`: Support `WXWebAssembly` in WeChat miniprogram environment, pthread and workers are not supported.
 
 ## Usage
 
@@ -110,11 +110,12 @@ Pass options to the default exported `init` function:
 init({
   locateFile (path, dir) {
     if (/\.worker\.m?js$/.test(path)) {
-      return 'your custom worker js path'
+      return 'your/custom/worker/js/path'
     } else {
-      return 'your custom wasm path'
+      return 'your/custom/wasm/path'
     }
-  }
+  },
+  mainScriptUrlOrBlob: 'import/main/js/path/from/worker'
 }).then(({ Module }) => {
   // ...
 })

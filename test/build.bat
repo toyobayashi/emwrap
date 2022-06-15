@@ -3,7 +3,7 @@
 set out="%~dp0out"
 if not exist %out% mkdir %out%
 
-set optimize=-O3 -g1 -sMIN_CHROME_VERSION=48 -sUSE_PTHREADS=1
+set optimize=-O3 -g1 -sMIN_CHROME_VERSION=48 -sUSE_PTHREADS=1 -sPTHREAD_POOL_SIZE=1
 @REM set optimize=
 
 @REM node "%~dp0..\bin\emwrap.js" --name=lib --script="%~dp0scripts\umd.js" -o "%out%\lib.umd.js" "%out%\lib.js"

@@ -26,7 +26,7 @@ function wrap (code, options) {
   }
 
   if (weixin) {
-    code = code.replace(/(var ENVIRONMENT_IS_WEB\s*=\s*typeof window\s*===\s*['"]object['"]);/, '$1||typeof wx==="object";')
+    code = code.replace(/((var|const|let) ENVIRONMENT_IS_WEB\s*=\s*typeof window\s*===?\s*['"]object['"]);/, '$1||typeof wx==="object";')
     code = code.replace(/WebAssembly/g, '_WebAssembly')
     code = code.replace(/return getBinaryPromise\(\)/g, 'return (typeof WXWebAssembly!=="undefined"?Promise.resolve(wasmBinaryFile):getBinaryPromise())')
   }
@@ -34,7 +34,7 @@ function wrap (code, options) {
   if (module === 'esm') {
     code = code.replace(/new Worker\(pthreadMainJs\)/g, 'new Worker(pthreadMainJs,{type:"module"})')
   } else if (module === 'mjs') {
-    code = code.replace(/allocateUnusedWorker:\s*function\s*\(\)\s*\{(\r?\n?.*?)*?\},/, (substring) => substring.replace(/\.worker\.js/g, '.worker.mjs'))
+    code = code.replace(/allocateUnusedWorker:\s*((function\s*\(\)\s*)|(\(\)\s*=>\s*))\{(\r?\n?.*?)*?\},/, (substring) => substring.replace(/\.worker\.js/g, '.worker.mjs'))
   }
 
   code = code.replace(/\s*if\s*\(typeof document\s*!==?\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, ' ')
@@ -335,7 +335,6 @@ function wrapWorker (code, options) {
     throw new TypeError(`unsupport module type: ${module}`)
   }
   const name = options.name || ''
-  const weixin = Boolean(options.weixin)
 
   const importScriptStringRegex = /if\s*\(typeof e\.data\.urlOrBlob\s*===?\s*['"]string['"]\)\s*\{?(\r?\n.*?)*?.*?else\s*\{(\r?\n?.*?)*?\}/
   if (module === 'umd') {
