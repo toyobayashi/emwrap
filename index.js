@@ -34,7 +34,7 @@ function wrap (code, options) {
   if (module === 'esm') {
     code = code.replace(/new Worker\(pthreadMainJs\)/g, 'new Worker(pthreadMainJs,{type:"module"})')
   } else if (module === 'mjs') {
-    code = code.replace(/allocateUnusedWorker:\s*function\s*\(\)\s*\{(\r?\n.*?)*?\},/, (substring) => substring.replace(/\.worker\.js/g, '.worker.mjs'))
+    code = code.replace(/allocateUnusedWorker:\s*function\s*\(\)\s*\{(\r?\n?.*?)*?\},/, (substring) => substring.replace(/\.worker\.js/g, '.worker.mjs'))
   }
 
   code = code.replace(/\s*if\s*\(typeof document\s*!==?\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, ' ')
@@ -337,7 +337,7 @@ function wrapWorker (code, options) {
   const name = options.name || ''
   const weixin = Boolean(options.weixin)
 
-  const importScriptStringRegex = /if\s*\(typeof e\.data\.urlOrBlob\s*===?\s*['"]string['"]\)\s*\{?(\r?\n.*?)*?else\s*\{(\r?\n.*?)*?\}/
+  const importScriptStringRegex = /if\s*\(typeof e\.data\.urlOrBlob\s*===?\s*['"]string['"]\)\s*\{?(\r?\n.*?)*?.*?else\s*\{(\r?\n?.*?)*?\}/
   if (module === 'umd') {
     code = code.replace(importScriptStringRegex, (substring) => `${substring}${name}.default(Module).then(function(c){Module=c.Module});`)
   } else if (module === 'cjs') {
