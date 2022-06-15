@@ -6,8 +6,8 @@ Support module type:
 
 * `umd` (default, support browser `<script>`, Node.js and bundler)
 * `cjs` (support Node.js and CommonJS bundler)
-* `esm` (support browser `<script type="module">` and ES module bundler)
-* `mjs` (support Node.js runtime only)
+* `esm` (support browser `<script type="module">` and ES module bundler, if using pthread, bundle umd instead)
+* `mjs` (support Node.js runtime only, all js emitted by emscripten need to rename .mjs suffix via `--output`)
 
 ```bash
 npm install -g @tybys/emwrap
@@ -18,6 +18,7 @@ emwrap [--name=myWasmLib]
        [--module=<umd | esm | cjs | mjs>]
        [--minify]
        [--weixin]
+       [--worker]
        [--output=/path/to/output.js]
        [--script=/path/to/script.js]
        [--initscript=/path/to/script.js]
@@ -77,7 +78,8 @@ Make sure to set `node.__dirname: false` or `node: false` in your webpack config
 ```js
 module.exports = {
   node: {
-    __dirname: false
+    __dirname: false,
+    __filename: false
   }
   // or
   // node: false
@@ -106,8 +108,12 @@ Pass options to the default exported `init` function:
 
 ```js
 init({
-  locateFile () {
-    return '/custom/path/to/renamed.wasm'
+  locateFile (path, dir) {
+    if (/\.worker\.m?js$/.test(path)) {
+      return 'your custom worker js path'
+    } else {
+      return 'your custom wasm path'
+    }
   }
 }).then(({ Module }) => {
   // ...

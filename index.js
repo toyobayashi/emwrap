@@ -31,9 +31,16 @@ function wrap (code, options) {
     code = code.replace(/return getBinaryPromise\(\)/g, 'return (typeof WXWebAssembly!=="undefined"?Promise.resolve(wasmBinaryFile):getBinaryPromise())')
   }
 
+  if (module === 'esm') {
+    code = code.replace(/new Worker\(pthreadMainJs\)/g, 'new Worker(pthreadMainJs,{type:"module"})')
+  } else if (module === 'mjs') {
+    code = code.replace(/allocateUnusedWorker:\s*function\s*\(\)\s*\{(\r?\n.*?)*?\},/, (substring) => substring.replace(/\.worker\.js/g, '.worker.mjs'))
+  }
+
   code = code.replace(/\s*if\s*\(typeof document\s*!==?\s*['"]undefined['"]\s*&&\s*document\.currentScript\)/g, ' ')
   code = code.replace(/\(?typeof document\s*!==?\s*['"]undefined['"]\s*&&\s*document\.currentScript\)?\s*\?\s*document\.currentScript\.src\s*:\s*((undefined)|(void 0))/g, '__emwrap_dcs__||undefined')
   code = code.replace(/document\.currentScript\.src/g, '__emwrap_dcs__')
+  code = code.replace(/(_scriptDir\s*=\s*)__filename/g, '$1__emwrap_dcs__||(typeof __filename!=="undefined"?__filename:__emwrap_dcs__)')
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
   const pre = `${module === 'esm' || module === 'mjs'
@@ -307,15 +314,62 @@ ${((module === 'esm' || module === 'mjs') && script) ? fs.readFileSync(script, '
   return pre + code + post
 }
 
-async function wrapAndMinify (code, options) {
+async function wrapAndMinify (code, options, f = wrap) {
   const terser = require('terser')
   const terserOptions = {
     compress: true,
     mangle: true,
     ...(options.terser || {})
   }
-  return (await terser.minify(wrap(code, options), terserOptions)).code
+  return (await terser.minify(f(code, options), terserOptions)).code
+}
+
+function wrapWorker (code, options) {
+  if (!code || typeof code !== 'string') {
+    throw new TypeError('invalid code')
+  }
+
+  options = options || {}
+  const module = options.module || 'umd'
+  if (module !== 'umd' && module !== 'esm' && module !== 'cjs' && module !== 'mjs') {
+    throw new TypeError(`unsupport module type: ${module}`)
+  }
+  const name = options.name || ''
+  const weixin = Boolean(options.weixin)
+
+  const importScriptStringRegex = /if\s*\(typeof e\.data\.urlOrBlob\s*===?\s*['"]string['"]\)\s*\{?(\r?\n.*?)*?else\s*\{(\r?\n.*?)*?\}/
+  if (module === 'umd') {
+    code = code.replace(importScriptStringRegex, (substring) => `${substring}${name}.default(Module).then(function(c){Module=c.Module});`)
+  } else if (module === 'cjs') {
+    // code = code.replace(importScriptStringRegex, 'if(typeof e.data.urlOrBlob==="string")require(e.data.urlOrBlob).default(Module).then(function(c){Module=c.Module});else import(new URL(e.data.urlOrBlob,"file://"+__filename)).then(function(m){m.default(Module).then(function(c){Module=c.Module})})')
+    code = code.replace(importScriptStringRegex, (substring) => `
+      if (ENVIRONMENT_IS_NODE) {
+        var r = typeof __webpack_public_path__ !== "undefined" ? __non_webpack_require__ : require;
+        if(typeof e.data.urlOrBlob==="string")r(e.data.urlOrBlob).default(Module).then(function(c){Module=c.Module});
+      } else {
+        self.exports = {};
+        self.module = { exports: self.exports };
+      ${substring}
+        var m = self.module.exports;
+        delete self.module;
+        m.default(Module).then(function(c){Module=c.Module});
+      }\n`)
+  } else {
+    if (module === 'mjs') {
+      code = 'import { createRequire } from "module";var require=createRequire(process.cwd() + "/");\n' + code
+      code = code.replace(/__filename/g, 'import.meta.url')
+      code = code.replace(importScriptStringRegex, '(typeof e.data.urlOrBlob==="string"?import(e.data.urlOrBlob.startsWith("file://")?e.data.urlOrBlob:("file://"+e.data.urlOrBlob)):import(new URL(e.data.urlOrBlob,import.meta.url))).then(function(m){m.default(Module).then(function(c){Module=c.Module})});')
+    } else if (module === 'esm') {
+      code = code.replace(importScriptStringRegex, `
+      self.exports = {};
+      self.module = { exports: self.exports };
+      (typeof e.data.urlOrBlob==="string"?import(e.data.urlOrBlob):import(new URL(e.data.urlOrBlob,import.meta.url))).then(function(m){m=m.default?m:self.module.exports;delete self.module;m.default(Module).then(function(c){Module=c.Module})});
+      `)
+    }
+  }
+  return code
 }
 
 exports.wrap = wrap
+exports.wrapWorker = wrapWorker
 exports.wrapAndMinify = wrapAndMinify

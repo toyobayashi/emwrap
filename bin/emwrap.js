@@ -10,7 +10,7 @@ const minimist = require('minimist')
 
 const args = minimist(process.argv.slice(2), {
   string: ['name', 'script', 'output', 'exports', 'module', 'initscript'],
-  boolean: ['minify', 'weixin'],
+  boolean: ['minify', 'weixin', 'worker'],
   alias: {
     version: ['v', 'V'],
     help: ['h'],
@@ -38,6 +38,7 @@ if (args._.length > 0) {
   }
   const exports = (args.exports || '')
   emwrap(filePath, {
+    worker: Boolean(args.worker),
     module: args.module || '',
     output: args.output || '',
     name: args.name || '',
@@ -63,6 +64,7 @@ emwrap [--name=myWasmLib]
        [--module=<umd | esm | cjs | mjs>]
        [--minify]
        [--weixin]
+       [--worker]
        [--output=/path/to/output.js]
        [--script=/path/to/script.js]
        [--initscript=/path/to/script.js]
@@ -76,13 +78,21 @@ async function emwrap (filePath, options) {
   if (!filePath || typeof filePath !== 'string') {
     throw new TypeError('missing input file')
   }
-  const { wrap, wrapAndMinify } = require('..')
+  const { wrap, wrapAndMinify, wrapWorker } = require('..')
   options = options || {}
   options.output = options.output || filePath
   const minify = typeof options.minify === 'boolean' ? options.minify : false
-  const code = minify
-    ? (await wrapAndMinify(fs.readFileSync(filePath, 'utf8'), options))
-    : wrap(fs.readFileSync(filePath, 'utf8'), options)
-
-  await fs.promises.writeFile(options.output, code, 'utf8')
+  if (options.worker) {
+    const code = minify
+      ? (await wrapAndMinify(fs.readFileSync(filePath, 'utf8'), options, wrapWorker))
+      : wrapWorker(fs.readFileSync(filePath, 'utf8'), options)
+  
+    await fs.promises.writeFile(options.output, code, 'utf8')
+  } else {
+    const code = minify
+      ? (await wrapAndMinify(fs.readFileSync(filePath, 'utf8'), options))
+      : wrap(fs.readFileSync(filePath, 'utf8'), options)
+  
+    await fs.promises.writeFile(options.output, code, 'utf8')
+  }
 }

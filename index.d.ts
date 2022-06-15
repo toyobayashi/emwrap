@@ -1,6 +1,7 @@
 import { MinifyOptions } from 'terser';
 
 export declare interface WrapOptions {
+  worker?: boolean;
   module?: 'umd' | 'esm' | 'cjs' | 'mjs';
   name?: string;
   weixin?: boolean;
@@ -14,4 +15,5 @@ export declare interface WrapAndMinifyOptions extends WrapOptions {
 }
 
 export declare function wrap (code: string, options?: WrapOptions): string;
-export declare function wrapAndMinify (code: string, options?: WrapAndMinifyOptions): Promise<string>;
+export declare function wrapWorker (code: string, options?: Omit<WrapOptions, 'script' | 'onInitScript' | 'exports' | 'weixin'>): string;
+export declare function wrapAndMinify (code: string, options?: WrapAndMinifyOptions, f?: (code: string, options?: any) => string): Promise<string>;
