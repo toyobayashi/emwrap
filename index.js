@@ -203,9 +203,31 @@ ${exports.map(v => `      ,${v}: undefined`).join('\n')}
         return Promise.resolve(initResult);
       }
       if (promise) return promise;
-      var p = promise = new Promise(function (resolve, reject) {
+      var p = promise = new Promise(function (res, rej) {
         mod = mod || {};
         Module = mod;
+
+        var onUncaughtException = function (listener) {
+          if (typeof process !== 'undefined') {
+            process.on('uncaughtException', listener);
+          }
+        };
+
+        var offUncaughtException = function (listener) {
+          if (typeof process !== 'undefined') {
+            process.off('uncaughtException', listener);
+          }
+        };
+
+        var reject = function (reason) {
+          rej(reason);
+          offUncaughtException(reject);
+        };
+
+        var resolve = function (value) {
+          res(value);
+          offUncaughtException(reject);
+        };
 
         var hasOnAbort = 'onAbort' in mod;
         var userOnAbort = mod.onAbort;
@@ -271,9 +293,7 @@ ${onInitScript ? `
 `}
         };
 
-        if (typeof process !== 'undefined') {
-          process.once('uncaughtException', reject)
-        }
+        onUncaughtException(reject);
         emctx = __emwrap_main__(mod);
       }).catch(function (err) {
         Module = undefined;
