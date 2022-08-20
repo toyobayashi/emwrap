@@ -44,7 +44,7 @@ function wrap (code, options) {
   code = code.replace(/process\["on"\]\("unhandledRejection",\s*abort\);/, '')
 
   const pre = `${module === 'esm' || module === 'mjs'
-  ? `${module === 'mjs' ? 'import { createRequire } from "module";' : ''}var Module;\nvar __exports =`
+  ? `${module === 'mjs' ? 'import { createRequire } from "module";\n' : ''}var Module;\nvar __exports =`
   : module === 'cjs' 
     ? 'exports = module.exports ='
     : ''}
@@ -72,19 +72,19 @@ ${module === 'mjs' ?
 ${module === 'umd' ? `
   var name = '${name}';
   if(typeof exports === 'object' && typeof module === 'object') {
-    module.exports = factory(nativeRequire, _process);
+    module.exports = factory(nativeRequire, _process, root);
   } else if(typeof define === 'function' && define.amd) {
     define([], function () {
-      return factory(nativeRequire, _process);
+      return factory(nativeRequire, _process, root);
     });
   } else if(typeof exports === 'object') {
-    if (name) exports[name] = factory(nativeRequire, _process);
+    if (name) exports[name] = factory(nativeRequire, _process, root);
   } else {
-    if (name) root[name] = factory(nativeRequire, _process);
+    if (name) root[name] = factory(nativeRequire, _process, root);
   }
 ` :
 `
-  return factory(nativeRequire, _process);
+  return factory(nativeRequire, _process, root);
 `}
 })((function (defaultValue) {
   if (typeof globalThis !== 'undefined') return globalThis;
@@ -113,14 +113,14 @@ ${module === 'umd' ? `
   }
 
   return g || defaultValue;
-})(this), function (require, process, module) {
+})(this), function (require, process, global, module) {
   var __emwrap_dcs__ = '';
   try {
-    __emwrap_dcs__ = ${module === 'mjs' ? 'import.meta.url.substring(8)' : module === 'esm'
+    __emwrap_dcs__ = ${module === 'mjs' ? 'require("url").fileURLToPath(import.meta.url)' : module === 'esm'
       ? '(typeof __webpack_public_path__ !== "undefined" ? document.currentScript.src : import.meta.url)'
       : 'document.currentScript.src'};
   } catch (_) {}
-  ${module === 'mjs' ? 'var __dirname = require("path").dirname(import.meta.url.substring(8));' : ''}
+  ${module === 'mjs' ? 'var __dirname = require("path").dirname(require("url").fileURLToPath(import.meta.url));' : ''}
   function __emwrap_main__ (Module) {
 
   ${weixin ? `
